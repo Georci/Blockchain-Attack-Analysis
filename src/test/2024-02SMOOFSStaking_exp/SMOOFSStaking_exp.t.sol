@@ -70,7 +70,12 @@ contract ContractTest is Test {
     }
 
     // 进入重入，开始回调
-    function(address operator, address from, uint256 tokenId, bytes calldata data) external returns (bytes4) {
+    function onERC721Received(
+        address operator,
+        address from,
+        uint256 tokenId,
+        bytes calldata data
+    ) external returns (bytes4) {
         while (setCount < 9) {
             ++setCount;
             Smoofs.safeTransferFrom(address(this), address(SMOOFSStaking), smoofsTokenId);
