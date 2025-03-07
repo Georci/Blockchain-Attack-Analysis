@@ -1,3 +1,5 @@
+import {console} from "../../../lib/forge-std/src/Test.sol";
+
 //SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
@@ -36,12 +38,7 @@ abstract contract Ownable {
 }
 
 abstract contract ERC721Receiver {
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external virtual returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata) external virtual returns (bytes4) {
         return ERC721Receiver.onERC721Received.selector;
     }
 }
@@ -64,31 +61,11 @@ abstract contract ERC721Receiver {
 ///
 abstract contract ERC404 is Ownable {
     // Events
-    event ERC20Transfer(
-        address indexed from,
-        address indexed to,
-        uint256 amount
-    );
-    event Approval(
-        address indexed owner,
-        address indexed spender,
-        uint256 amount
-    );
-    event Transfer(
-        address indexed from,
-        address indexed to,
-        uint256 indexed id
-    );
-    event ERC721Approval(
-        address indexed owner,
-        address indexed spender,
-        uint256 indexed id
-    );
-    event ApprovalForAll(
-        address indexed owner,
-        address indexed operator,
-        bool approved
-    );
+    event ERC20Transfer(address indexed from, address indexed to, uint256 amount);
+    event Approval(address indexed owner, address indexed spender, uint256 amount);
+    event Transfer(address indexed from, address indexed to, uint256 indexed id);
+    event ERC721Approval(address indexed owner, address indexed spender, uint256 indexed id);
+    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
 
     // Metadata
     /// @dev Token name
@@ -171,10 +148,7 @@ abstract contract ERC404 is Ownable {
 
     /// @notice Function for token approvals
     /// @dev This function assumes id / native if amount less than or equal to current max id
-    function approve(
-        address spender,
-        uint256 amountOrId
-    ) public virtual returns (bool) {
+    function approve(address spender, uint256 amountOrId) public virtual returns (bool) {
         if (amountOrId <= minted && amountOrId > 0) {
             address owner = _ownerOf[amountOrId];
 
@@ -203,11 +177,7 @@ abstract contract ERC404 is Ownable {
 
     /// @notice Function for mixed transfers
     /// @dev This function assumes id / native if amount less than or equal to current max id
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amountOrId
-    ) public virtual {
+    function transferFrom(address from, address to, uint256 amountOrId) public virtual {
         _preTransferCheck(from, to);
 
         if (amountOrId <= minted) {
@@ -219,11 +189,7 @@ abstract contract ERC404 is Ownable {
                 revert("InvalidRecipient");
             }
 
-            if (
-                msg.sender != from &&
-                !isApprovedForAll[from][msg.sender] &&
-                msg.sender != getApproved[amountOrId]
-            ) {
+            if (msg.sender != from && !isApprovedForAll[from][msg.sender] && msg.sender != getApproved[amountOrId]) {
                 revert("unauthorized");
             }
 
@@ -251,52 +217,39 @@ abstract contract ERC404 is Ownable {
             emit ERC20Transfer(from, to, _getUnit());
         } else {
             uint256 allowed = allowance[from][msg.sender];
+            console.log("allowed is :", allowed);
+            console.log("amountOrId is :", amountOrId);
 
-            if (allowed != type(uint256).max)
-                allowance[from][msg.sender] = allowed - amountOrId;
+            if (allowed != type(uint256).max) allowance[from][msg.sender] = allowed - amountOrId;
 
             _transfer(from, to, amountOrId);
         }
     }
 
     /// @notice Function for fractional transfers
-    function transfer(
-        address to,
-        uint256 amount
-    ) public virtual returns (bool) {
+    function transfer(address to, uint256 amount) public virtual returns (bool) {
         return _transfer(msg.sender, to, amount);
     }
 
     /// @notice Function for native transfers with contract support
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 id
-    ) public virtual {
+    function safeTransferFrom(address from, address to, uint256 id) public virtual {
         transferFrom(from, to, id);
 
         if (
             isContract(to) &&
-            ERC721Receiver(to).onERC721Received(msg.sender, from, id, "") !=
-            ERC721Receiver.onERC721Received.selector
+            ERC721Receiver(to).onERC721Received(msg.sender, from, id, "") != ERC721Receiver.onERC721Received.selector
         ) {
             revert("UnsafeRecipient");
         }
     }
 
     /// @notice Function for native transfers with contract support and callback data
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 id,
-        bytes calldata data
-    ) public virtual {
+    function safeTransferFrom(address from, address to, uint256 id, bytes calldata data) public virtual {
         transferFrom(from, to, id);
 
         if (
             isContract(to) &&
-            ERC721Receiver(to).onERC721Received(msg.sender, from, id, data) !=
-            ERC721Receiver.onERC721Received.selector
+            ERC721Receiver(to).onERC721Received(msg.sender, from, id, data) != ERC721Receiver.onERC721Received.selector
         ) {
             revert("UnsafeRecipient");
         }
@@ -330,11 +283,7 @@ abstract contract ERC404 is Ownable {
     }
 
     /// @notice Internal function for fractional transfers
-    function _transfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal returns (bool) {
+    function _transfer(address from, address to, uint256 amount) internal returns (bool) {
         uint256 unit = _getUnit();
         uint256 balanceBeforeSender = balanceOf[from];
         uint256 balanceBeforeReceiver = balanceOf[to];
@@ -348,8 +297,7 @@ abstract contract ERC404 is Ownable {
         // Skip burn for certain addresses to save gas
         // 销毁代币
         if (!whitelist[from]) {
-            uint256 tokens_to_burn = (balanceBeforeSender / unit) -
-                (balanceOf[from] / unit);
+            uint256 tokens_to_burn = (balanceBeforeSender / unit) - (balanceOf[from] / unit);
             for (uint256 i = 0; i < tokens_to_burn; i++) {
                 _burn(from);
             }
@@ -358,8 +306,7 @@ abstract contract ERC404 is Ownable {
         // Skip minting for certain addresses to save gas
         // 铸造代币
         if (!whitelist[to]) {
-            uint256 tokens_to_mint = (balanceOf[to] / unit) -
-                (balanceBeforeReceiver / unit);
+            uint256 tokens_to_mint = (balanceOf[to] / unit) - (balanceBeforeReceiver / unit);
             for (uint256 i = 0; i < tokens_to_mint; i++) {
                 _mint(to);
             }
@@ -408,10 +355,7 @@ abstract contract ERC404 is Ownable {
         emit Transfer(from, address(0), id);
     }
 
-    function _setNameSymbol(
-        string memory _name,
-        string memory _symbol
-    ) internal {
+    function _setNameSymbol(string memory _name, string memory _symbol) internal {
         name = _name;
         symbol = _symbol;
     }

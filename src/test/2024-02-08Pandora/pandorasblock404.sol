@@ -1,7 +1,4 @@
 //SPDX-License-Identifier: UNLICENSED
-
-
-
 // Pandora's Blocks is the first innovative designed nodes rewards system built upon the ERC404 token standard
 
 pragma solidity ^0.8.0;

